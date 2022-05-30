@@ -67,12 +67,84 @@
     
     <div class="e-content article-entry" itemprop="articleBody">
       
-        <p><img src="D:\blog\source\images\图片1.png"></p>
+        <p>一、基础配置</p>
+<p>1、创建三台虚拟机</p>
+<table>
+<thead>
+<tr>
+<th align="center">主机名</th>
+<th align="center">node1</th>
+<th align="center">node2</th>
+<th align="center">node3</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">IP</td>
+<td align="center">192.168.137.151</td>
+<td align="center">192.168.137.152</td>
+<td align="center">192.168.137.153</td>
+</tr>
+<tr>
+<td align="center">用户名</td>
+<td align="center">root</td>
+<td align="center">root</td>
+<td align="center">rott</td>
+</tr>
+<tr>
+<td align="center">密码</td>
+<td align="center">123456</td>
+<td align="center">123456</td>
+<td align="center">123456</td>
+</tr>
+</tbody></table>
+<p>2、集群角色</p>
+<table>
+<thead>
+<tr>
+<th align="center">服务器</th>
+<th align="center">运行角色</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">node1</td>
+<td align="center">namenode  datanode resourcemanager nodemanager Follower Master</td>
+</tr>
+<tr>
+<td align="center">node2</td>
+<td align="center">Secondarynamenode datanode nodemanager worker</td>
+</tr>
+<tr>
+<td align="center">node3</td>
+<td align="center">datanode  nodemanager Follower</td>
+</tr>
+</tbody></table>
+<p>3、查看主机名</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cat /etc/hostname</span><br></pre></td></tr></table></figure>
+
+<p>4、Host映射</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cat hosts</span><br></pre></td></tr></table></figure>
+
+<p>5、关闭防火墙</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">systemctl status firewalld.service</span><br></pre></td></tr></table></figure>
+
+<p>6、登陆node1 node2 node3</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ssh node1</span><br><span class="line">ssh node2</span><br><span class="line">ssh node3</span><br></pre></td></tr></table></figure>
+
+<p>7、同步时间</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ntpdate ntp5.aliyun.com</span><br></pre></td></tr></table></figure>
+
+<p>二、JDK</p>
+<p>1、上传jdk</p>
+<p>2、解压jdk</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tar -zxvf /export/softwares/jdk-8u171-linux-x64.tar.gz -C /export/esrvers</span><br></pre></td></tr></table></figure>
+
+<p>3、配置环境变量</p>
+<p><img src="D:\blog\source\images\图片2.png"></p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2022/05/30/Spark%E5%9F%BA%E7%A1%80%E9%85%8D%E7%BD%AE/" data-id="cl3s4b7tu0001vsk1g4u3bi3i" data-title="Spark基础配置" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2022/05/30/Spark%E5%9F%BA%E7%A1%80%E9%85%8D%E7%BD%AE/" data-id="cl3shw05u0001a4k1fqcve6z2" data-title="Spark基础配置" class="article-share-link">Share</a>
       
       
       
