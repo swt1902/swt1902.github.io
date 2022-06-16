@@ -67,11 +67,118 @@
     
     <div class="e-content article-entry" itemprop="articleBody">
       
-        
+        <h4 id="1、生产者API"><a href="#1、生产者API" class="headerlink" title="1、生产者API"></a>1、生产者API</h4><p>（1）Kafka生产者有两个线程，一个为主线程，一个为Sender线程（它是一个守护线程）</p>
+<p>（2）消息发送后首先经历拦截器，在拦截器中可以对消息做一些统一的操作，比如：加上统一的标识，然后会被序列化为字节流</p>
+<p>（3）到达分区器，分区器主要是对消息去哪个分区做规划</p>
+<p>（4）做好分区规划后，消息到达了消息累加器，累加器是一个双端队列（每一个队列对应一个分区），然后将消息封装到ProducerBatch,ProducerBatch也是一个多消息的容器，它是可以不断想里面加入消息的。让消息变成一批次，一批次的。</p>
+<p>（5）Sender线程主动从消息累加器中取消息，然后将上一步Deque&lt;partitionId,ProducerBatch&gt;转换为&lt;Node,List&gt;的形式，然后再将其转换为&lt;Node,Request&gt;,这一步是将Kafka消息从逻辑上转换为物理上的主要转折点。从这步开始，就不会关心分区这个逻辑概念，只会注意要发向哪一台机器了</p>
+<p>（6）在发送之前，还会将消息转换为Map&lt;Node,Dequen【Requst】&gt;</p>
+<p>（7）保存在InFlightRequst中，表示消息发送等待回应</p>
+<p>（8）消息发最终由Selector发送</p>
+<p> 重要的生产者参数</p>
+<p><strong>１.</strong> acks<br>这个参数主要用来指定分区中必须要有多少个副本都收到这个消息，生产者客户端才认为这条消息成功写入。它涉及消息的可靠性和吞吐量之间的权衡。acks参数有3种类型的值（都是字符串类型）</p>
+<p><strong>２.</strong> max.request.size<br>这个参数用来限制生产者客户端所能发送消息的最大值</p>
+<p><strong>３.</strong> retry.backoff.ms和retries 参数用来配置生产者重试的次数，默认值为0，也就是说在发生异常的时候不进行重试。</p>
+<p><strong>４.</strong> compression.type<br>这个参数用来指定消息的压缩放方式，默认值是“none”,即默认情况下，消息不会被压缩。</p>
+<p><strong>５.</strong> connections.max.ides.ms<br>这个参数用来指定在多久之后关闭闲置连接</p>
+<p><strong>６.</strong> linger.ms<br>这个参数用来指定生产者发送 ProducerBatch 之前等待更多的消息（ProducerRecord）加入 ProducerBatch 的时间</p>
+<p><strong>７.</strong> receive.buffer.bytes<br>这个参数用来设置 Socket 接收消息缓冲区（SO_RECBUF）的大小</p>
+<p><strong>８.</strong> send.buffer.bytes<br>这个参数用来设置 Socket 发送消息缓冲区（SO_SNDBUF）的大小</p>
+<p><strong>９.</strong> request.timeout.ms<br>这个参数用来配置 Producer 等待请求响应的最长时间</p>
+<p>生产者api参数发送方式</p>
+<p>这个客户端经过了生产环境测试并且通常情况它比原来Scals客户端更加快速、功能更加齐全。你可以通过添加以下示例的Maven坐标到客户端依赖中来使用这个新的客户端（你可以修改版本号来使用新的发布版本）：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&lt;dependency&gt;</span><br><span class="line">    &lt;groupId&gt;org.apache.kafka&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;kafka-clients&lt;/artifactId&gt;</span><br><span class="line">    &lt;version&gt;0.10.0.0&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br></pre></td></tr></table></figure>
+
+<p>在调用 send 方法后可以接着调用 get() 方法，send 方法的返回值是一个 Future\对象，RecordMetadata 里面包含了发送消息的主题、分区、偏移量等信息。改写后的代码如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">for (int i = 0; i &lt; 10; i++) &#123;</span><br><span class="line">    try &#123;</span><br><span class="line">        ProducerRecord&lt;String, String&gt; record = new ProducerRecord&lt;&gt;(topicName, &quot;k&quot; + i, &quot;world&quot; + i);</span><br><span class="line">        /*同步发送消息*/</span><br><span class="line">        RecordMetadata metadata = producer.send(record).get();</span><br><span class="line">        System.out.printf(&quot;topic=%s, partition=%d, offset=%s \n&quot;,</span><br><span class="line">                metadata.topic(), metadata.partition(), metadata.offset());</span><br><span class="line">    &#125; catch (InterruptedException | ExecutionException e) &#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="2、消费者API"><a href="#2、消费者API" class="headerlink" title="2、消费者API"></a>2、消费者API</h4><p>一个正常的消费逻辑需要具备以下几个步骤:</p>
+<p>(1)配置消费者客户端参数<br>(2)创建相应的消费者实例;<br>(3)订阅主题;<br>(4)拉取消息并消费;<br>(5)提交消费位移 offset;<br>(6)关闭消费者实例。</p>
+<p>消费者API示例代码</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">Properties props = new Properties(); </span><br><span class="line"></span><br><span class="line">// 定义 kakfa 服务的地址,不需要将所有 broker 指定上</span><br><span class="line">props.put(&quot;bootstrap.servers&quot;, &quot;master:9092&quot;); </span><br><span class="line"></span><br><span class="line">// 指定 consumer group </span><br><span class="line">props.put(&quot;group.id&quot;, &quot;g1&quot;); </span><br><span class="line"></span><br><span class="line">// 是否自动提交 offset </span><br><span class="line">props.put(&quot;enable.auto.commit&quot;, &quot;true&quot;); </span><br><span class="line"></span><br><span class="line">// 自动提交 offset 的时间间隔</span><br><span class="line">props.put(&quot;auto.commit.interval.ms&quot;, &quot;1000&quot;);</span><br><span class="line"></span><br><span class="line">// key 的反序列化类</span><br><span class="line">props.put(&quot;key.deserializer&quot;,&quot;org.apache.kafka.common.serialization.StringDeserializer&quot;); </span><br><span class="line"></span><br><span class="line">// value 的反序列化类</span><br><span class="line">props.put(&quot;value.deserializer&quot;,&quot;org.apache.kafka.common.serialization.StringDeserializer&quot;); </span><br><span class="line"></span><br><span class="line">// 如果没有消费偏移量记录,则自动重设为起始 offset:latest, earliest, none</span><br><span class="line">//Earliest目前状态下最前面的一条消息（日志在一定保存时间后会自动清空）</span><br><span class="line">//none（上次记录的偏移量，如果没有，会抛异常） </span><br><span class="line">props.put(&quot;auto.offset.reset&quot;,&quot;earliest&quot;); </span><br><span class="line"></span><br><span class="line">// 定义 consumer KafkaConsumer&lt;String, String&gt; consumer = new KafkaConsumer&lt;&gt;(props); </span><br><span class="line">// 消费者订阅的 topic, 可同时订阅多个</span><br><span class="line">consumer.subscribe(Arrays.asList(&quot;first&quot;, &quot;test&quot;,&quot;test1&quot;)); </span><br></pre></td></tr></table></figure>
+
+<p>\1. 正则方式订阅主题</p>
+<p>如果消费者采用的是正则表达式的方式(subscribe(Pattern))订阅, 在之后的过程中,如果有人又创建了新的主题,并且主题名字与正表达式相匹配,那么这个消费者就可以消费到新添加的主题中的消息。如果应用程序需要消费多个主题,并且可以处理不同的类型,那么这种订阅方式就很有效。</p>
+<p>\2. assign 订阅主题</p>
+<p>这个方法只接受参数 partitions,用来指定需要订阅的分区集合</p>
+<p>\3. subscribe 与 assign 的区别</p>
+<p>(1)通过 subscribe()方法订阅主题具有消费者自动再均衡功能 ; </p>
+<p>在多个消费者的情况下可以根据分区分配策略来自动分配各个消费者与分区的关系。 </p>
+<p>当消费组的消费者增加或减少时,分区分配关系会自动调整,以实现消费负载均衡及故障自动转移。</p>
+<p>(2)assign() 方法订阅分区时,是不具备消费者自动均衡的功能的; </p>
+<p>其实这一点从 assign()方法参数可以看出端倪,两种类型 subscribe()都有 ConsumerRebalanceListener 类型参数的方法,而 assign()方法却没有。</p>
+<p>\4. 消息的消费模式</p>
+<p>Kafka 中的消费是基于拉取模式的。消息的消费一般有两种模式:推送模式和拉取模式。</p>
+<p>推模式是服务端主动将消息推送给消费者,而拉模式是消费者主动向服务端发起请求来拉取消息</p>
+<p>Kafka 中的消息消费是一个不断轮询的过程,消费者所要做的就是重复地调用 poll() 方法, poll() 方法返回的是所订阅的主题(分区)上的一组消息。</p>
+<p>\5. 指定位移消费</p>
+<p>seek() 方法:从特定的位移处开始拉取消息</p>
+<p>\6. 再均衡监听器</p>
+<p>一个消费组中,一旦有消费者的增减发生,会触发消费者组的 rebalance 再均衡; </p>
+<p>如果 A 消费者消费掉的一批消息还没来得及提交 offset, 而它所负责的分区在 rebalance 中转移给了 B 消费者,则有可能发生数据的重复消费处理。此情形下,可以通过再均衡监听器做一定程度的补救;</p>
+<p>\7. 自动位移提交</p>
+<p>Kafka 消费的编程逻辑中位移提交是一大难点,自动提交消费位移的方式非常简便,它免去了复杂的位移提交逻辑,让编码更简洁。但随之而来的是重复消费和消息丢失的问题。</p>
+<p>(1)重复消费</p>
+<p>假设刚刚提交完一次消费位移,然后拉取一批消息进行消费,在下一次自动提交消费位移之前,消费者崩溃了,那么又得从上一次位移提交的地方重新开始消费,这样便发生了重复消费的现象(对于再均衡的情况同样适用)。我们可以通过减小位移提交的时间间隔来减小重复消息的窗口大小,但这样并不能避免重复消费的发送,而且也会使位移提交更加频繁。</p>
+<p>(2)丢失消息</p>
+<p>拉取线程不断地拉取消息并存入本地缓存, 比如在 BlockingQueue 中, 另一个处理线程从缓存中读取消息并进行相应的逻辑处理</p>
+<h4 id="3、Topic管理-API"><a href="#3、Topic管理-API" class="headerlink" title="3、Topic管理 API"></a>3、Topic管理 API</h4><p>列出主题</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">ListTopicsResult listTopicsResult = adminClient.listTopics(); </span><br><span class="line"></span><br><span class="line">Set&lt;String&gt; topics = listTopicsResult.names().get(); </span><br><span class="line"></span><br><span class="line">System.out.println(topics);</span><br></pre></td></tr></table></figure>
+
+<p>查看主题信息</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">DescribeTopicsResult describeTopicsResult = adminClient.describeTopics(Arrays.asList(&quot;tpc_4&quot;, &quot;tpc_3&quot;)); </span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Map&lt;String, TopicDescription&gt; res = describeTopicsResult.all().get();</span><br><span class="line"></span><br><span class="line">Set&lt;String&gt; ksets = res.keySet(); </span><br><span class="line">for (String k : ksets) &#123; </span><br><span class="line">	System.out.println(res.get(k)); </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>创建主题</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">// 参数配置</span><br><span class="line">Properties props = new Properties(); </span><br><span class="line">props.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG,&quot;master:9092,slave1:9092,slave2:9092&quot;); </span><br><span class="line">props.put(AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG,3000); </span><br><span class="line"></span><br><span class="line">// 创建 admin client 对象</span><br><span class="line">AdminClient adminClient = KafkaAdminClient.create(props); </span><br><span class="line"></span><br><span class="line">// 由服务端 controller 自行分配分区及副本所在 broker </span><br><span class="line">NewTopic tpc_3 = new NewTopic(&quot;tpc_3&quot;, 2, (short) 1); </span><br><span class="line"></span><br><span class="line">// 手动指定分区及副本的 broker 分配</span><br><span class="line">HashMap&lt;Integer, List&lt;Integer&gt;&gt; replicaAssignments = new HashMap&lt;&gt;(); </span><br><span class="line"></span><br><span class="line">// 分区 0,分配到 broker0,broker1 replicaAssignments.put(0,Arrays.asList(0,1)); </span><br><span class="line">// 分区 1,分配到 broker0,broker2 </span><br><span class="line">replicaAssignments.put(0,Arrays.asList(0,1));</span><br><span class="line">NewTopic tpc_4 = new NewTopic(&quot;tpc_4&quot;, replicaAssignments); </span><br><span class="line">CreateTopicsResult result = adminClient.createTopics(Arrays.asList(tpc_3,tpc_4)); </span><br><span class="line"></span><br><span class="line">// 从 future 中等待服务端返回</span><br><span class="line">try &#123; </span><br><span class="line">	result.all().get(); </span><br><span class="line">&#125; catch (Exception e) &#123; </span><br><span class="line">e.printStackTrace(); </span><br><span class="line">&#125; </span><br><span class="line">adminClient.close();</span><br></pre></td></tr></table></figure>
+
+<p>删除主题</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">DeleteTopicsResult deleteTopicsResult = adminClient.deleteTopics(Arrays.asList(&quot;tpc_1&quot;, &quot;tpc_1&quot;)); </span><br><span class="line"></span><br><span class="line">Map&lt;String, KafkaFuture&lt;Void&gt;&gt; values = deleteTopicsResult.values();</span><br><span class="line"></span><br><span class="line">System.out.println(values);</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+<p>一、producer 发布消息</p>
+<p>1、写入方式</p>
+<p>producer 采用 push 模式将消息发布到 broker，每条消息都被 append 到 patition 中，属于顺序写磁盘（顺序写磁盘效率比随机写内存要高，保障 kafka 吞吐率）。</p>
+<p>2、消息路由</p>
+<p>producer 发送消息到 broker 时，会根据分区算法选择将其存储到哪一个 partition。其路由机制为：</p>
+<p>指定了 patition，则直接使用；</p>
+<p>未指定 patition 但指定 key，通过对 key 的 value 进行hash 选出一个 patition</p>
+<p>patition 和 key 都未指定，使用轮询选出一个 patition。</p>
+<p>3、写入流程</p>
+<p>流程说明：</p>
+<p>producer 先从 zookeeper 的 “&#x2F;brokers&#x2F;…&#x2F;state” 节点找到该 partition 的 leader</p>
+<p>producer 将消息发送给该 leader</p>
+<p>leader 将消息写入本地 log</p>
+<p>followers 从 leader pull 消息，写入本地 log 后 leader 发送 ACK</p>
+<p>leader 收到所有 ISR 中的 replica 的 ACK 后，增加 HW（high watermark，最后 commit 的 offset） 并向 producer 发送 ACK</p>
+<p>二、创建 topic</p>
+<p>流程说明：</p>
+<p>\1. controller 在 ZooKeeper 的 &#x2F;brokers&#x2F;topics 节点上注册 watcher，当 topic 被创建，则 controller 会通过 watch 得到该 topic 的 partition&#x2F;replica 分配。</p>
+<p>\2. controller从 &#x2F;brokers&#x2F;ids 读取当前所有可用的 broker 列表，对于 set_p 中的每一个 partition：</p>
+<p>从分配给该 partition 的所有 replica（称为AR）中任选一个可用的 broker 作为新的 leader，并将AR设置为新的ISR将新的 leader 和 ISR 写入 &#x2F;brokers&#x2F;topics&#x2F;[topic]&#x2F;partitions&#x2F;[partition]&#x2F;state</p>
+<p>\3. controller 通过 RPC 向相关的 broker 发送 LeaderAndISRRequest。</p>
+<p>三、删除 topic</p>
+<p>\1. controller 在 zooKeeper 的 &#x2F;brokers&#x2F;topics 节点上注册 watcher，当 topic 被删除，则 controller 会通过 watch 得到该 topic 的 partition&#x2F;replica 分配。</p>
+<p>\2. 若 delete.topic.enable&#x3D;false，结束；否则 controller 注册在 &#x2F;admin&#x2F;delete_topics 上的 watch 被 fire，controller 通过回调向对应的 broker 发送 StopReplicaRequest。</p>
+<p>四、consumer API</p>
+<p>kafka 提供了两套 consumer API：</p>
+<p>1）The high-level Consumer API</p>
+<p>2）The SimpleConsumer API</p>
+<p>其中 high-level consumer API 提供了一个从 kafka 消费数据的高层抽象，而 SimpleConsumer API 则需要开发人员更多地关注细节。</p>
+<p>The high-level consumer API提供了 consumer group 的语义，一个消息只能被 group 内的一个 consumer 所消费，且 consumer 消费消息时不关注 offset，最后一个 offset 由 zookeeper 保存。</p>
+<p>使用 high-level consumer API 可以是多线程的应用，应当注意：</p>
+<p>1）如果消费线程大于 patition 数量，则有些线程将收不到消息</p>
+<p>2）如果 patition 数量大于线程数，则有些线程多收到多个 patition 的消息</p>
+<p>3）如果一个线程消费多个 patition，则无法保证你收到的消息的顺序，而一个 patition 内的消息是有序的</p>
+
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2022/06/16/Kafka-API%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95/" data-id="cl4gqgb2v0000psk18wqe99va" data-title="Kafka API使用方法" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2022/06/16/Kafka-API%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95/" data-id="cl4gqu21x0002uwk12qjb1xy3" data-title="Kafka API使用方法" class="article-share-link">Share</a>
       
       
       
