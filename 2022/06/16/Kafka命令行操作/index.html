@@ -67,11 +67,94 @@
     
     <div class="e-content article-entry" itemprop="articleBody">
       
-        
+        <p>1、cd &#x2F;export&#x2F;server&#x2F;kafka&#x2F;bin目录下的命令行工具</p>
+<table>
+<thead>
+<tr>
+<th>kafka-configs.sh</th>
+<th>用于配置管理</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>kafka-console-consumer.sh</td>
+<td>用于消费消息</td>
+</tr>
+<tr>
+<td>kafka-console-producer.sh</td>
+<td>用于生产消息</td>
+</tr>
+<tr>
+<td>kafka-consumer-perf-test.sh</td>
+<td>用于测试消费性能</td>
+</tr>
+<tr>
+<td>kafka-topics.sh</td>
+<td>用于管理主题</td>
+</tr>
+<tr>
+<td>kafka-dump-log.sh</td>
+<td>用于查看日志内容</td>
+</tr>
+<tr>
+<td>kafka-server-stop.sh</td>
+<td>用于关闭kafka服务</td>
+</tr>
+<tr>
+<td>kafka-preferred-replica-election.sh</td>
+<td>用于优先副本的选举</td>
+</tr>
+<tr>
+<td>kafka-server-start.sh</td>
+<td>用于启动kafka服务</td>
+</tr>
+<tr>
+<td>kafka-producer-perf-test.sh</td>
+<td>用于测试生产性能</td>
+</tr>
+<tr>
+<td>kafka-reassign-partitions.sh</td>
+<td>用于分区重分配</td>
+</tr>
+</tbody></table>
+<p>2、创建 topic</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">./kafka-topics.sh --zookeeper master:2181,slave1:2181,slave2:2181 --create --replication-factor 3 --partitions 3 --topic test_2</span><br><span class="line"></span><br><span class="line">--replication-factor 副本数量</span><br><span class="line">--partitions 分区数量</span><br><span class="line">--topic topic 名称</span><br></pre></td></tr></table></figure>
+
+<p>3、指定副本的存储位置</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./kafka-topics.sh --create --topic test_3 --zookeeper master:2181 --replica-assignment 0:1,1:2</span><br></pre></td></tr></table></figure>
+
+<p>4、删除 topic</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">./kafka-topics.sh  --delete --topic tpc_1 --zookeeper master：2181</span><br><span class="line"></span><br><span class="line">异步线程去删除）删除 topic,需要一个参数处于启用状态: delete.topic.enable = true,否则删不掉</span><br></pre></td></tr></table></figure>
+
+<p>5、查看 topic</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">./kafka-topics.sh --create --topic tpc_1   --zookeeper master:2181 --replica-assignment 0:1,1:2</span><br><span class="line"></span><br><span class="line">./kafka-topics.sh --describe --topic tpc_1 --zookeper master:2181 </span><br></pre></td></tr></table></figure>
+
+<p>6、增加分区数</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./kafka-topics.sh --alter --topic test_3 --partitions 3 --zookeeper master:2181</span><br></pre></td></tr></table></figure>
+
+<p>7、动态配置 topic 参数</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./kafka-configs.sh --zookeeper master:2181 --entity-type topics --entity-name tpc_1 --alter --add-config compression.type=gzip </span><br></pre></td></tr></table></figure>
+
+<p>8、删除配置参数</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./kafka-configs.sh --zookeeper master:2181 --entity-type topics --entity-name tpc_1 --alter --delete-config compression.type</span><br></pre></td></tr></table></figure>
+
+<p>9、Kafka命令行生产者与消费者操作</p>
+<p>生产者:kafka-console-producer</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./kafka-console-producer.sh --broker-list master:9092, slave1:9092, slave2:9092 --topic tpc_1</span><br></pre></td></tr></table></figure>
+
+<p>10、消费者:kafka-console-consumer</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./kafka-console-consumer.sh --bootstrap-server master:9092, slave1:9092, slave2:9092 --topic tpc_1 --from-beginning</span><br></pre></td></tr></table></figure>
+
+<p>11、指定要消费的分区,和要消费的起始 offset</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./kafka-console-consumer.sh --bootstrap-server master:9092,slave1:9092,slave2:9092 --topic tcp_1 --offset 2 --partition 0</span><br></pre></td></tr></table></figure>
+
+<p>12、配置管理 kafka-configs</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">./kafka-configs.sh zookeeper master: 2181 --describe --entity-type topics --entity-name tpc_2 </span><br><span class="line"></span><br><span class="line">./kafka-configs.sh zookeeper master: 2181 --describe --entity-type brokers --entity-name 0 --zookeeper master:2181</span><br></pre></td></tr></table></figure>
+
+
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2022/06/16/Kafka%E5%91%BD%E4%BB%A4%E8%A1%8C%E6%93%8D%E4%BD%9C/" data-id="cl4gqayjb00017gk12wvtglzl" data-title="Kafka命令行操作" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2022/06/16/Kafka%E5%91%BD%E4%BB%A4%E8%A1%8C%E6%93%8D%E4%BD%9C/" data-id="cl4gqdfw9000110k13st6ee8z" data-title="Kafka命令行操作" class="article-share-link">Share</a>
       
       
       
@@ -80,6 +163,15 @@
   
     
 <nav id="article-nav">
+  
+    <a href="/2022/06/16/Kafka-API%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Kafka API使用方法
+        
+      </div>
+    </a>
   
   
     <a href="/2022/06/16/Kafka%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/" id="article-nav-older" class="article-nav-link-wrap">
@@ -113,6 +205,10 @@
       <ul>
         
           <li>
+            <a href="/2022/06/16/Kafka-API%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95/">Kafka API使用方法</a>
+          </li>
+        
+          <li>
             <a href="/2022/06/16/Kafka%E5%91%BD%E4%BB%A4%E8%A1%8C%E6%93%8D%E4%BD%9C/">Kafka命令行操作</a>
           </li>
         
@@ -126,10 +222,6 @@
         
           <li>
             <a href="/2022/05/30/Spark-local-stand-alone%E9%85%8D%E7%BD%AE/">Spark local&amp;stand-alone配置</a>
-          </li>
-        
-          <li>
-            <a href="/2022/05/30/Spark%E5%9F%BA%E7%A1%80%E9%85%8D%E7%BD%AE/">Spark基础配置</a>
           </li>
         
       </ul>
