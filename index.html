@@ -47,6 +47,71 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-Kafka-Eagle功能" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/06/21/Kafka-Eagle%E5%8A%9F%E8%83%BD/" class="article-date">
+  <time class="dt-published" datetime="2022-06-21T01:34:32.000Z" itemprop="datePublished">2022-06-21</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/06/21/Kafka-Eagle%E5%8A%9F%E8%83%BD/">Kafka Eagle功能</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>1、背景</p>
+<p>Kafka产线环境需要管理的Topic和Consumser越来越多，使用命令行工具进行管理会非常繁杂。因此，大数据平台上需要一套Kafka的管理监控系统，Kafka-Eagle。</p>
+<p>Kafka Eagle是一个用于监控和管理kafka的开源组件，可以同时监控多个kafka集群。</p>
+<p>Kafka Eagle提供了完善的监控页面和kafka常用操作的管理界面，便于管理员对kafka集群进行运维管理。</p>
+<p>Kafka Eagle提供了KSQL操作的可视化界面，让你可以非常快速的查看kafka中的消息。</p>
+<p>Kafka Eagle支持多种报警方式，如钉钉，微信和邮件等。</p>
+<p>2、下载安装包</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># 安装包下载地址</span><br><span class="line">http://download.smartloli.org/</span><br></pre></td></tr></table></figure>
+
+<p>3、配置环境变量</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">配置环境变量:JAVA_HOME 和 KE_HOME</span><br><span class="line">vi /etc/profile </span><br><span class="line">export JAVA_HOME=/usr/java/jdk1.8</span><br><span class="line">export PATH=$PATH:$JAVA_HOME/bin</span><br><span class="line">export KE_HOME=/export/server/kafka-eagle</span><br><span class="line">export PATH=$PATH:$KE_HOME/bin</span><br><span class="line">配置 KafkaEagle</span><br><span class="line">cd /export/server/kafka-eagle/conf </span><br><span class="line">vi system-config.properties</span><br><span class="line">需要更改的地方：</span><br><span class="line">kafka.eagle.zk.cluster.alias=cluster1</span><br><span class="line">cluster1.zk.list=node1:2181,node2:2181,node3:2181</span><br><span class="line">cluster1.kafka.eagle.broker.size=3</span><br><span class="line"></span><br><span class="line">kafka.eagle.url=jdbc:sqlite:/export/data/db/ke.db</span><br></pre></td></tr></table></figure>
+
+<p>4、创建目录</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mkdir /export/data/db</span><br></pre></td></tr></table></figure>
+
+<p>5、启动Eagle</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/export/server/kafka-eagle/bin/ke.sh start</span><br></pre></td></tr></table></figure>
+
+<p>6、功能介绍</p>
+<p>（1）通过界面来创建Topic</p>
+<p>（2）通过kafka-eagle发送消息</p>
+<p>（3）监控大屏功能；</p>
+<p>（4）Consumers（消费监控）该模块包含监控不同消费者组中的Topic被消费的详情</p>
+<p>（5）Cluster（集群管理）该模块包含Kafka集群和Zookeeper集群的详情展示，例如Kafka的IP和端口、版本号、启动时间、Zookeeper的Leader和Follower。同时，还支持多Kafka集群切换，以及Zookeeper Client数据查看等功能。</p>
+<p>（6）Metrics（集群状态）该模块包含监控Kafka集群和Zookeeper集群的核心指标，包含Kafka的消息发送趋势、消息大小接收与发送趋势、Zookeeper的连接数趋势等。同时，还支持查看Broker的瞬时指标数据</p>
+<p>（7）Alarm（告警）该模块包含告警集群异常和消费者应用Lag异常。同时，支持多种IM告警方式，例如邮件、钉钉、微信、Webhook等。</p>
+<p>（8）System（系统管理） 该模块包含用户管理，例如创建用户、用户授权、资源管理等</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2022/06/21/Kafka-Eagle%E5%8A%9F%E8%83%BD/" data-id="cl4ni5ozn0001b8k19e8g1s2i" data-title="Kafka Eagle功能" class="article-share-link">Share</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-Kafka-API使用方法" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2022/06/16/Kafka-API%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95/" class="article-date">
@@ -180,7 +245,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2022/06/16/Kafka-API%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95/" data-id="cl4gqu21x0002uwk12qjb1xy3" data-title="Kafka API使用方法" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2022/06/16/Kafka-API%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95/" data-id="cl4ni5ozi0000b8k18tlacez4" data-title="Kafka API使用方法" class="article-share-link">Share</a>
       
       
       
@@ -301,7 +366,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2022/06/16/Kafka%E5%91%BD%E4%BB%A4%E8%A1%8C%E6%93%8D%E4%BD%9C/" data-id="cl4gqu21r0000uwk130dr4jsw" data-title="Kafka命令行操作" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2022/06/16/Kafka%E5%91%BD%E4%BB%A4%E8%A1%8C%E6%93%8D%E4%BD%9C/" data-id="cl4ni5ozp0002b8k13tezgame" data-title="Kafka命令行操作" class="article-share-link">Share</a>
       
       
       
@@ -406,7 +471,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2022/06/16/Kafka%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/" data-id="cl4gqu21v0001uwk1g4z56tup" data-title="Kafka环境配置" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2022/06/16/Kafka%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/" data-id="cl4ni5ozq0003b8k1aje5gvzd" data-title="Kafka环境配置" class="article-share-link">Share</a>
       
       
       
@@ -489,7 +554,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2022/05/30/Spark-HA-Yarn%E9%85%8D%E7%BD%AE/" data-id="cl4gqu21y0003uwk1gbgygv3x" data-title="Spark-HA-Yarn配置" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2022/05/30/Spark-HA-Yarn%E9%85%8D%E7%BD%AE/" data-id="cl4ni5ozr0004b8k18wti8tf0" data-title="Spark-HA-Yarn配置" class="article-share-link">Share</a>
       
       
       
@@ -597,7 +662,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2022/05/30/Spark-local-stand-alone%E9%85%8D%E7%BD%AE/" data-id="cl4gqu21z0004uwk1frzk7iqp" data-title="Spark local&amp;stand-alone配置" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2022/05/30/Spark-local-stand-alone%E9%85%8D%E7%BD%AE/" data-id="cl4ni5ozt0007b8k168za7ohv" data-title="Spark local&amp;stand-alone配置" class="article-share-link">Share</a>
       
       
       
@@ -764,7 +829,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2022/05/30/Spark%E5%9F%BA%E7%A1%80%E9%85%8D%E7%BD%AE/" data-id="cl4gqu2200005uwk134yy9u5u" data-title="Spark基础配置" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2022/05/30/Spark%E5%9F%BA%E7%A1%80%E9%85%8D%E7%BD%AE/" data-id="cl4ni5ozt0006b8k14h4ogwq1" data-title="Spark基础配置" class="article-share-link">Share</a>
       
       
       
@@ -817,7 +882,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2022/05/28/hello-world/" data-id="cl4gqu2200006uwk14xor2njm" data-title="Hello World" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2022/05/28/hello-world/" data-id="cl4ni5ozr0005b8k18pdd0erq" data-title="Hello World" class="article-share-link">Share</a>
       
       
       
@@ -850,6 +915,10 @@
       <ul>
         
           <li>
+            <a href="/2022/06/21/Kafka-Eagle%E5%8A%9F%E8%83%BD/">Kafka Eagle功能</a>
+          </li>
+        
+          <li>
             <a href="/2022/06/16/Kafka-API%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95/">Kafka API使用方法</a>
           </li>
         
@@ -863,10 +932,6 @@
         
           <li>
             <a href="/2022/05/30/Spark-HA-Yarn%E9%85%8D%E7%BD%AE/">Spark-HA-Yarn配置</a>
-          </li>
-        
-          <li>
-            <a href="/2022/05/30/Spark-local-stand-alone%E9%85%8D%E7%BD%AE/">Spark local&amp;stand-alone配置</a>
           </li>
         
       </ul>
